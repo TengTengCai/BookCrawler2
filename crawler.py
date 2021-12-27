@@ -10,8 +10,13 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 
+import numpy as np
+import requests
+from cv2 import cv2
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
+
 
 from db_controller import MyDataBase, Book
 
@@ -23,10 +28,103 @@ class BookCrawler(Thread):
         super().__init__()
         self.database = MyDataBase(db_uri)
         self.options = webdriver.ChromeOptions()
-        self.options.add_argument("--headless")
+        # self.options.add_argument("--headless")
         self.driver = webdriver.Chrome(options=self.options)
 
+    def is_login(self):
+        p = re.compile(r"login\.dangdang\.com")
+        current_url = self.driver.current_url
+        if p.search(current_url):
+            return True
+        return False
+
+    def do_login(self):
+        username = self.driver.find_element(
+            By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/div[1]/div[1]/input"
+        )
+        username.send_keys("13883884201")
+        time.sleep(1)
+        password = self.driver.find_element(
+            By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/div[2]/div[1]/input"
+        )
+        password.send_keys("tianjun223.")
+        time.sleep(1)
+        btn = self.driver.find_element(
+            By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/a"
+        )
+        btn.click()
+        time.sleep(3)
+        # 是否需要滑块验证码
+        try:
+            slide = self.driver.find_element(
+                By.CLASS_NAME, "slideVerify"
+            )
+        except Exception as e:
+            logger.error(e)
+            return
+        if slide is None:
+            return
+        self.sliding()
+
+    def sliding(self):
+        while True:
+            bg_img_raw, s_img_raw = self.get_slide_image()
+            if bg_img_raw is None or s_img_raw is None:
+                self.refresh_slide()
+                continue
+            x = self.get_x(bg_img_raw, s_img_raw)
+            logger.info(f"offset x: {x}")
+            if x is None or x < 50 or x > 350:
+                self.refresh_slide()
+                continue
+            self.sliding_btn(x)
+
+    def sliding_btn(self, x):
+        action_chains = webdriver.ActionChains(self.driver)
+        btn = self.driver.find_element(By.ID, "sliderBtn")
+        action_chains.click_and_hold(btn)
+        action_chains.pause(1)
+        action_chains.move_by_offset(x-36, 0)
+        action_chains.release()
+        action_chains.perform()
+
+    def get_slide_image(self):
+        bg_img = self.driver.find_element(
+            By.ID, "bgImg"
+        ).get_attribute("src")
+        s_img = self.driver.find_element(
+            By.ID, "simg"
+        ).get_attribute("src")
+        if bg_img is None or s_img is None:
+            return None, None
+        bg_img_resp = requests.get(bg_img, stream=True)
+        s_img_resp = requests.get(s_img, stream=True)
+        if bg_img_resp.status_code == 200 and s_img_resp.status_code == 200:
+            return bg_img_resp.content, s_img_resp.content
+        else:
+            return None, None
+
+    def refresh_slide(self):
+        btn = self.driver.find_element(By.ID, "sliderRefresh")
+        if btn:
+            btn.click()
+
+    @staticmethod
+    def get_x(bg_img_raw, s_img_raw):
+        bg_img_np = np.fromstring(bg_img_raw, np.uint8)
+        s_img_np = np.fromstring(s_img_raw, np.uint8)
+        bg_img = cv2.imdecode(bg_img_np, cv2.IMREAD_COLOR)
+        s_img = cv2.imdecode(s_img_np, cv2.IMREAD_COLOR)
+
+        bg_edge = cv2.Canny(bg_img, 100, 200)
+        s_edge = cv2.Canny(s_img, 100, 200)
+        res = cv2.matchTemplate(bg_edge, s_edge, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)  # 寻找最优匹配
+        x, _ = max_loc
+        return x
+
     def get_url(self):
+        # return "http://product.dangdang.com/29333681.html"
         url = self.database.get_url()
         if url is None:
             url = "http://book.dangdang.com/"
@@ -40,6 +138,8 @@ class BookCrawler(Thread):
     def load_page(self, url):
         self.driver.get(url)
         time.sleep(1)
+        if self.is_login():
+            self.do_login()
         self.driver.refresh()
         js = f"""
 let scrollHeight = Math.max(
