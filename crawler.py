@@ -8,36 +8,14 @@ import logging
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
 from threading import Thread
 
 from selenium import webdriver
 from bs4 import BeautifulSoup
 
-from db_controller import MyDataBase
+from db_controller import MyDataBase, Book
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class Book(object):
-    url: str  # 图书URL
-    image_url: str  # 图书的图片URL
-
-    name: str  # 图书名
-    book_type: str  # 图书类型
-    author: str  # 作者
-    introduction: str  # 介绍
-    publishing: str  # 出版社
-    publishing_time: str  # 出版时间
-    price: float  # 当当价格
-    original_price: float  # 原价
-
-    editors_choice: str  # 编辑推荐
-    content_validity: str  # 内容简介
-    about_author: str  # 作者简介
-    catalog: str  # 目录
-    media_reviews: str  # 媒体评价
 
 
 class BookCrawler(Thread):
@@ -54,8 +32,10 @@ class BookCrawler(Thread):
             url = "http://book.dangdang.com/"
         return url
 
-    def put_url(self):
-        pass
+    def put_url(self, url_list):
+        with ThreadPoolExecutor(max_workers=128) as executor:
+            for i in url_list:
+                executor.submit(self.database.add_url, i)
 
     def load_page(self, url):
         self.driver.get(url)
@@ -88,68 +68,68 @@ return scrollHeight;
         book_name_div = soup.find("div", {"class": "name_info"})
         if book_name_div is None:
             return
-        book_dict = {
-            "url": url,
-            "name": book_name_div.h1.get_text(strip=True),
-            "introduction": soup.find("span", {"class": "head_title_name"}).get_text(strip=True)
-        }
+        book = Book(
+            url=url,
+            name=book_name_div.h1.get_text(strip=True),
+            introduction=soup.find("span", {"class": "head_title_name"}).get_text(strip=True)
+        )
         big_pic = soup.find("div", {"class": "big_pic"}).img['src']
         p = re.compile(r'^//')
         if p.match(big_pic):
             big_pic = f"http:{big_pic}"
-        book_dict["image_url"] = big_pic
+        book.image_url = big_pic
         book_type = soup.find("li", {"id": "detail-category-path"}).get_text(strip=True)
         if book_type is None:
             book_type = soup.find("div", {"class": "breadcrumb"}).get_text(strip=True),
-        book_dict['book_type'] = book_type.replace("所属分类：", "")
+        book.book_type = book_type.replace("所属分类：", "")
         author = soup.find("span", {"id": "author"})
         if author is None:
-            book_dict['author'] = ""
+            book.author = ""
         else:
-            book_dict['author'] = soup.find("span", {"id": "author"}).text.replace("作者:", "")
+            book.author = soup.find("span", {"id": "author"}).text.replace("作者:", "")
         messbox = soup.find("div", {"class": "messbox_info"})
         for item in messbox:
             if "出版社" in str(item.text):
-                book_dict['publishing'] = item.get_text(strip=True).replace("出版社:", "")
+                book.publishing = item.get_text(strip=True).replace("出版社:", "")
             elif "出版时间" in str(item):
-                book_dict['publishing_time'] = item.get_text(strip=True).replace("出版时间:", "")
-        book_dict['price'] = soup.find("p", {"id": "dd-price"}).get_text(strip=True).replace("¥", "")
-        book_dict['original_price'] = soup.find("div", {"id": "original-price"}).get_text(strip=True).replace("¥", "")
+                book.publishing_time = item.get_text(strip=True).replace("出版时间:", "")
+        book.price = soup.find("p", {"id": "dd-price"}).get_text(strip=True).replace("¥", "")
+        book.original_price = soup.find("div", {"id": "original-price"}).get_text(strip=True).replace("¥", "")
 
         editors_choice = soup.find("div", {"id": "abstract"})
         if editors_choice is None:
-            book_dict['editors_choice'] = ""
+            book.editors_choice = ""
         else:
-            book_dict['editors_choice'] = editors_choice.find("div", {"class": "descrip"}).get_text(strip=True)
+            book.editors_choice = editors_choice.find("div", {"class": "descrip"}).get_text(strip=True)
 
         content_validity = soup.find("div", {"id": "content"})
         if content_validity is None:
-            book_dict['content_validity'] = ""
+            book.content_validity = ""
         else:
-            book_dict['content_validity'] = content_validity.find("div", {"class": "descrip"}).get_text(strip=True)
+            book.content_validity = content_validity.find("div", {"class": "descrip"}).get_text(strip=True)
 
         about_author = soup.find("div", {"id": "authorIntroduction"})
         if about_author is None:
-            book_dict['about_author'] = ""
+            book.about_author = ""
         else:
-            book_dict['about_author'] = about_author.find("div", {"class": "descrip"}).get_text(strip=True)
+            book.about_author = about_author.find("div", {"class": "descrip"}).get_text(strip=True)
 
         catalog = soup.find("textarea", {"id": "catalog-textarea"})
         if catalog is None:
             catalog2 = soup.find("div", {"id": "catalog"})
             if catalog2 is None:
-                book_dict['catalog'] = ""
+                book.catalog = ""
             else:
-                book_dict['catalog'] = catalog2.find("div", {"class": "descrip"}).get_text(strip=True)
+                book.catalog = catalog2.find("div", {"class": "descrip"}).get_text(strip=True)
         else:
-            book_dict['catalog'] = catalog.get_text(strip=True)
+            book.catalog = catalog.get_text(strip=True)
 
         media_reviews = soup.find("div", {"id": "mediaFeedback"})
         if media_reviews is None:
-            book_dict['media_reviews'] = ""
+            book.media_reviews = ""
         else:
-            book_dict['media_reviews'] = media_reviews.get_text()
-        return book_dict
+            book.media_reviews = media_reviews.get_text()
+        return book
 
     def get_useful_url(self):
         page_source = self.driver.page_source
@@ -211,8 +191,6 @@ return scrollHeight;
                 self.database.insert_book(book)
                 logger.info(f"From URL {book_url} Insert Book {book}.")
             url_list = self.get_useful_url()
-            with ThreadPoolExecutor(max_workers=128) as executor:
-                for i in url_list:
-                    executor.submit(self.database.add_url, i)
+            self.put_url(url_list)
 
     pass
