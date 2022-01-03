@@ -1,0 +1,12 @@
+version: "3.9"  # optional since v1.27.0
+services:
+  selenium:
+    image: selenium/standalone-chrome
+    ports:
+      - "4444:4444"
+
+  crawler:
+    build: .
+    working_dir: /code
+    volumes:
+      - .:/code

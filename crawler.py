@@ -26,12 +26,15 @@ logger = logging.getLogger(__name__)
 
 
 class BookCrawler(Thread):
-    def __init__(self, mongo_db: MongoDataBase):
+    def __init__(self, mongo_db: MongoDataBase, remote_uri=''):
         super().__init__()
         self.mongo_db = mongo_db
         self.options = webdriver.ChromeOptions()
         self.options.add_argument("--headless")
-        self.driver = webdriver.Chrome(options=self.options)
+        if remote_uri:
+            self.driver = webdriver.Remote(remote_uri, options=self.options)
+        else:
+            self.driver = webdriver.Chrome(options=self.options)
 
     def is_login(self):
         p = re.compile(r"login\.dangdang\.com")

@@ -9,7 +9,6 @@ from dataclasses import dataclass, asdict
 from random import randint
 
 from pymongo import MongoClient
-import redis
 
 logger = logging.getLogger(__name__)
 
@@ -77,22 +76,3 @@ class MongoDataBase(object):
             self.urls.update_one({'url': url}, {'$set': {'isExist': 'true'}})  # 更新URL的状态为True表示已经爬取过了
         except Exception as e:
             logger.exception(e)
-
-
-class RedisDataBase(object):
-    COOKIE_KEY = "dangdang:cookie"
-
-    def __init__(self, host, port, password, db):
-        self.pool = redis.ConnectionPool(host=host, port=port, db=db, password=password)
-
-    def get_redis_conn(self):
-        return redis.Redis(connection_pool=self.pool)
-
-    def set_cookies(self, cookies):
-        conn = self.get_redis_conn()
-        conn.set(self.COOKIE_KEY, cookies)
-        conn.expire(self.COOKIE_KEY, 60*60*12)
-
-    def get_cookies(self):
-        conn = self.get_redis_conn()
-        return conn.get(self.COOKIE_KEY)
