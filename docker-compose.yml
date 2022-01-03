@@ -4,6 +4,7 @@ services:
     container_name: selenium
     image: selenium/standalone-chrome
     restart: always
+    shm_size: 2gb
     ports:
       - "4444:4444"
 
@@ -14,5 +15,3 @@ services:
     working_dir: /code
     volumes:
       - .:/code
-    links:
-      - "selenium"
