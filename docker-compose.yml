@@ -1,12 +1,14 @@
-version: "3.9"  # optional since v1.27.0
+version: "3.3"  # optional since v1.27.0
 services:
   selenium:
     image: selenium/standalone-chrome
+    restart: always
     ports:
       - "4444:4444"
 
   crawler:
     build: .
+    restart: always
     working_dir: /code
     volumes:
       - .:/code
