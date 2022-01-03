@@ -5,6 +5,8 @@
 # @File    : crawler.py
 # @Software: PyCharm
 import logging
+import os.path
+import pickle
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -18,17 +20,17 @@ from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 
 
-from db_controller import MyDataBase, Book
+from db_controller import MongoDataBase, Book
 
 logger = logging.getLogger(__name__)
 
 
 class BookCrawler(Thread):
-    def __init__(self, db_uri):
+    def __init__(self, mongo_db: MongoDataBase):
         super().__init__()
-        self.database = MyDataBase(db_uri)
+        self.mongo_db = mongo_db
         self.options = webdriver.ChromeOptions()
-        # self.options.add_argument("--headless")
+        self.options.add_argument("--headless")
         self.driver = webdriver.Chrome(options=self.options)
 
     def is_login(self):
@@ -78,6 +80,11 @@ class BookCrawler(Thread):
                 self.refresh_slide()
                 continue
             self.sliding_btn(x)
+            time.sleep(3)
+            if not self.is_login():
+                cookies = self.driver.get_cookies()
+                pickle.dump(cookies, open("cookies.pkl", "wb"))
+                break
 
     def sliding_btn(self, x):
         action_chains = webdriver.ActionChains(self.driver)
@@ -116,6 +123,13 @@ class BookCrawler(Thread):
         bg_img = cv2.imdecode(bg_img_np, cv2.IMREAD_COLOR)
         s_img = cv2.imdecode(s_img_np, cv2.IMREAD_COLOR)
 
+        ret, bg_img = cv2.threshold(bg_img, 50, 255, cv2.THRESH_BINARY)
+        kernel = np.ones((10, 10), np.uint8)
+        bg_img = cv2.morphologyEx(bg_img, cv2.MORPH_CLOSE, kernel)
+        bg_img = cv2.morphologyEx(bg_img, cv2.MORPH_OPEN, kernel)
+
+        ret, s_img = cv2.threshold(s_img, 254, 255, cv2.THRESH_BINARY)
+
         bg_edge = cv2.Canny(bg_img, 100, 200)
         s_edge = cv2.Canny(s_img, 100, 200)
         res = cv2.matchTemplate(bg_edge, s_edge, cv2.TM_CCOEFF_NORMED)
@@ -125,18 +139,26 @@ class BookCrawler(Thread):
 
     def get_url(self):
         # return "http://product.dangdang.com/29333681.html"
-        url = self.database.get_url()
+        url = self.mongo_db.get_url()
         if url is None:
-            url = "http://book.dangdang.com/"
+            url = "http://book.dangdang.com/children"
+            # url = "http://login.dangdang.com/"
         return url
 
     def put_url(self, url_list):
         with ThreadPoolExecutor(max_workers=128) as executor:
             for i in url_list:
-                executor.submit(self.database.add_url, i)
+                executor.submit(self.mongo_db.add_url, i)
 
     def load_page(self, url):
         self.driver.get(url)
+        if os.path.exists("cookies.pkl"):
+            cookies = pickle.load(open("cookies.pkl", "rb"))
+            for cookie in cookies:
+                try:
+                    self.driver.add_cookie(cookie)
+                except Exception as e:
+                    logger.error(e)
         time.sleep(1)
         if self.is_login():
             self.do_login()
@@ -162,6 +184,12 @@ return scrollHeight;
     def parser(self, url):
         page_source = self.driver.page_source
         soup = BeautifulSoup(page_source, "lxml")
+        breadcrumb_div = soup.find("div", {"id": "breadcrumb"})
+        if breadcrumb_div is None:
+            return
+        breadcrumb = breadcrumb_div.get_text(strip=True)
+        if "童书" not in str(breadcrumb):  # 判断是否是属于童书
+            return
         product_main = soup.find("div", {"class": "product_main"})
         if product_main is None:
             return
@@ -220,7 +248,9 @@ return scrollHeight;
             if catalog2 is None:
                 book.catalog = ""
             else:
-                book.catalog = catalog2.find("div", {"class": "descrip"}).get_text(strip=True)
+                descrip = catalog2.find("div", {"class": "descrip"})
+                if descrip:
+                    book.catalog = descrip.get_text(strip=True)
         else:
             book.catalog = catalog.get_text(strip=True)
 
@@ -281,16 +311,14 @@ return scrollHeight;
                 logger.error(f"Load Page {book_url} Fail.")
                 self.driver.quit()
                 self.driver = webdriver.Chrome(options=self.options)
-                self.database.update_url(book_url)
+                self.mongo_db.update_url(book_url)
                 continue
 
-            self.database.update_url(book_url)
+            self.mongo_db.update_url(book_url)
 
             book = self.parser(book_url)
             if book is not None:
-                self.database.insert_book(book)
+                self.mongo_db.insert_book(book)
                 logger.info(f"From URL {book_url} Insert Book {book}.")
             url_list = self.get_useful_url()
             self.put_url(url_list)
-
-    pass
