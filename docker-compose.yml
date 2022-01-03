@@ -1,6 +1,7 @@
 version: "3.3"  # optional since v1.27.0
 services:
   selenium:
+    container_name: selenium
     image: selenium/standalone-chrome
     restart: always
     ports:
@@ -8,7 +9,10 @@ services:
 
   crawler:
     build: .
+    container_name: crawler
     restart: always
     working_dir: /code
     volumes:
       - .:/code
+    links:
+      - "selenium"

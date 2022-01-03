@@ -205,6 +205,8 @@ return scrollHeight;
             introduction=soup.find("span", {"class": "head_title_name"}).get_text(strip=True)
         )
         big_pic = soup.find("div", {"class": "big_pic"}).img['src']
+        if big_pic is None:
+            return
         p = re.compile(r'^//')
         if p.match(big_pic):
             big_pic = f"http:{big_pic}"
