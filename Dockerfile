@@ -8,4 +8,4 @@ RUN apt-get update --fix-missing \
     && apt-get clean all
 RUN pip install -i https://mirrors.aliyun.com/pypi/simple/ -r requirements.txt
 ENV TZ="Asia/Shanghai"
-CMD ["python", "main.py","-t", "3", "-r", "http://selenium:4444"]
+CMD ["python", "main.py","-t", "5", "-r", "http://selenium:4444"]
