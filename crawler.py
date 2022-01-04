@@ -30,7 +30,7 @@ class BookCrawler(Thread):
         super().__init__()
         self.mongo_db = mongo_db
         self.options = webdriver.ChromeOptions()
-        self.options.add_argument("--headless")
+        # self.options.add_argument("--headless")
         if remote_uri:
             self.driver = webdriver.Remote(remote_uri, options=self.options)
         else:
@@ -42,6 +42,41 @@ class BookCrawler(Thread):
         if p.search(current_url):
             return True
         return False
+
+    def do_baidu_login(self):
+        baidu = self.driver.find_element(By.XPATH, "/html/body/div/div[2]/div/div/div[2]/a[5]/img")
+        baidu.click()
+        windows = self.driver.window_handles
+        self.driver.switch_to.window(windows[-1])
+        self.driver.implicitly_wait(5)
+        username = self.driver.find_element(
+            By.XPATH, '//*[@id="TANGRAM_3__userName"]'
+        )
+        username.send_keys("13883884201")
+        password = self.driver.find_element(
+            By.XPATH, '//*[@id="TANGRAM_3__password"]'
+        )
+        password.send_keys("tianjun223.")
+        btn = self.driver.find_element(
+            By.XPATH, '//*[@id="TANGRAM_3__submit"]'
+        )
+        btn.click()
+        vcode_body = self.driver.find_element(
+            By.CLASS_NAME, 'vcode-body'
+        )
+        if vcode_body:
+            vcode_close = self.driver.find_element(
+                By.CLASS_NAME, 'vcode-close'
+            )
+            if vcode_close:
+                vcode_close.click()
+                btn.click()
+        windows = self.driver.window_handles
+        self.driver.switch_to.window(windows[0])
+        self.driver.implicitly_wait(5)
+        if not self.is_login():
+            cookies = self.driver.get_cookies()
+            pickle.dump(cookies, open("cookies.pkl", "wb"))
 
     def do_login(self):
         username = self.driver.find_element(
@@ -84,6 +119,13 @@ class BookCrawler(Thread):
                 continue
             self.sliding_btn(x)
             time.sleep(3)
+            error_div = self.driver.find_element(
+                By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/div[3]"
+            )
+
+            if error_div:
+                if len(error_div.text) > 5:
+                    break
             if not self.is_login():
                 cookies = self.driver.get_cookies()
                 pickle.dump(cookies, open("cookies.pkl", "wb"))
@@ -155,17 +197,20 @@ class BookCrawler(Thread):
 
     def load_page(self, url):
         self.driver.get(url)
-        if os.path.exists("cookies.pkl"):
-            cookies = pickle.load(open("cookies.pkl", "rb"))
-            for cookie in cookies:
-                try:
-                    self.driver.add_cookie(cookie)
-                except Exception as e:
-                    logger.error(e)
-        time.sleep(1)
+        if self.is_login():
+            if os.path.exists("cookies.pkl"):
+                cookies = pickle.load(open("cookies.pkl", "rb"))
+                for cookie in cookies:
+                    try:
+                        self.driver.add_cookie(cookie)
+                    except Exception as e:
+                        logger.error(e)
+            self.driver.refresh()
         if self.is_login():
             self.do_login()
-        self.driver.refresh()
+        if self.is_login():
+            self.do_baidu_login()
+        self.driver.implicitly_wait(5)
         js = f"""
 let scrollHeight = Math.max(
   document.body.scrollHeight, document.documentElement.scrollHeight,
