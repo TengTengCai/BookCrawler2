@@ -119,13 +119,15 @@ class BookCrawler(Thread):
                 continue
             self.sliding_btn(x)
             time.sleep(3)
-            error_div = self.driver.find_element(
-                By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/div[3]"
-            )
-
-            if error_div:
-                if len(error_div.text) > 5:
-                    break
+            try:
+                error_div = self.driver.find_element(
+                    By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/div[3]"
+                )
+                if error_div:
+                    if len(error_div.text) > 5:
+                        break
+            except Exception as e:
+                logger.error(e)
             if not self.is_login():
                 cookies = self.driver.get_cookies()
                 pickle.dump(cookies, open("cookies.pkl", "wb"))
@@ -205,7 +207,7 @@ class BookCrawler(Thread):
                         self.driver.add_cookie(cookie)
                     except Exception as e:
                         logger.error(e)
-            self.driver.refresh()
+            self.driver.get(url)
         if self.is_login():
             self.do_login()
         if self.is_login():

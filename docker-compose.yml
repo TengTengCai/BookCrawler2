@@ -4,7 +4,7 @@ services:
     container_name: selenium
     image: selenium/standalone-chrome
     restart: always
-    shm_size: 2gb
+    shm_size: 1gb
     ports:
       - "4444:4444"
 
