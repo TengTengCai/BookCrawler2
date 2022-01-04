@@ -297,7 +297,7 @@ return scrollHeight;
             url_list.append(href)
 
         for link in soup.find_all('a', {
-            "href": re.compile(r'category\.dangdang\.com/cp\d{2}\.\d{2}.\d{2}.\d{2}.\d{2}.\d{2}.html')
+            "href": re.compile(r'category\.dangdang\.com/cp01\.41\.\d{2}\.\d{2}\.\d{2}\.\d{2}.html')
         }):
             href = link.get('href')
             url_list.append(href)
