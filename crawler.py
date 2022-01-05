@@ -341,18 +341,18 @@ return scrollHeight;
             url = "http://product.dangdang.com" + href
             url_list.append(url)
 
-        for link in soup.find_all('a', {"href": re.compile(r'product\.dangdang\.com/\d{6,10}\.html$')}):
+        for link in soup.find_all('a', {"href": re.compile(r'product\.dangdang\.com/\d{6,10}\.html')}):
             href = link.get('href')
             if "http" not in href:
                 href = f"http:{href}"
             url_list.append(href)
 
-        for link in soup.find_all('a', {"href": re.compile(r'book\.dangdang\.com/\d{2}\.\d{2}\.htm$')}):
+        for link in soup.find_all('a', {"href": re.compile(r'book\.dangdang\.com/\d{2}\.\d{2}\.htm')}):
             href = link.get('href')
             url_list.append(href)
 
         for link in soup.find_all('a', {
-            "href": re.compile(r'category\.dangdang\.com/cp01\.41\.\d{2}\.\d{2}\.\d{2}\.\d{2}\.html$')
+            "href": re.compile(r'category\.dangdang\.com/cp01\.41\.\d{2}\.\d{2}\.\d{2}\.\d{2}\.html')
         }):
             href = link.get('href')
             url_list.append(href)
