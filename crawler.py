@@ -260,8 +260,10 @@ return scrollHeight;
         if p.match(big_pic):
             big_pic = f"http:{big_pic}"
         book.image_url = big_pic
-        book_type = soup.find("li", {"id": "detail-category-path"}).get_text(strip=True)
-        if book_type is None:
+        book_type = soup.find("li", {"id": "detail-category-path"})
+        if book_type:
+            book_type = book_type.get_text(strip=True)
+        else:
             book_type = soup.find("div", {"class": "breadcrumb"}).get_text(strip=True),
         book.book_type = book_type.replace("所属分类：", "")
         author = soup.find("span", {"id": "author"})
