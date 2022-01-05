@@ -30,7 +30,7 @@ class BookCrawler(Thread):
         super().__init__()
         self.mongo_db = mongo_db
         self.options = webdriver.ChromeOptions()
-        # self.options.add_argument("--headless")
+        self.options.add_argument("--headless")
         if remote_uri:
             self.driver = webdriver.Remote(remote_uri, options=self.options)
         else:
@@ -188,12 +188,12 @@ class BookCrawler(Thread):
 
     def get_url(self):
         # return "http://product.dangdang.com/29333681.html"
-        return "http://product.dangdang.com/410267114.html"
-        # url = self.mongo_db.get_url()
-        # if url is None:
-        #     url = "http://book.dangdang.com/children"
-        #     # url = "http://login.dangdang.com/"
-        # return url
+        # return "http://product.dangdang.com/410267114.html"
+        url = self.mongo_db.get_url()
+        if url is None:
+            url = "http://book.dangdang.com/children"
+            # url = "http://login.dangdang.com/"
+        return url
 
     def put_url(self, url_list):
         with ThreadPoolExecutor(max_workers=128) as executor:
