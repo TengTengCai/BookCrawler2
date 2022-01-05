@@ -71,6 +71,7 @@ class BookCrawler(Thread):
             if vcode_close:
                 vcode_close.click()
                 btn.click()
+                time.sleep(5)
         windows = self.driver.window_handles
         self.driver.switch_to.window(windows[0])
         self.driver.implicitly_wait(5)
@@ -118,13 +119,14 @@ class BookCrawler(Thread):
                 self.refresh_slide()
                 continue
             self.sliding_btn(x)
-            time.sleep(1)
+            time.sleep(3)
             try:
                 error_div = self.driver.find_element(
                     By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/div[3]"
                 )
                 if error_div:
                     if len(error_div.text) > 5:
+                        logger.error(error_div.text)
                         break
             except Exception as e:
                 logger.error(e)
