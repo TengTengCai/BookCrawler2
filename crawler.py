@@ -14,9 +14,11 @@ from threading import Thread
 
 import numpy as np
 import requests
+import selenium.common.exceptions
 from cv2 import cv2
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from bs4 import BeautifulSoup
 
 
@@ -31,8 +33,9 @@ class BookCrawler(Thread):
         self.mongo_db = mongo_db
         self.options = webdriver.ChromeOptions()
         self.options.add_argument("--headless")
-        if remote_uri:
-            self.driver = webdriver.Remote(remote_uri, options=self.options)
+        self.remote_uri = remote_uri
+        if self.remote_uri:
+            self.driver = webdriver.Remote(self.remote_uri, options=self.options)
         else:
             self.driver = webdriver.Chrome(options=self.options)
 
@@ -338,18 +341,18 @@ return scrollHeight;
             url = "http://product.dangdang.com" + href
             url_list.append(url)
 
-        for link in soup.find_all('a', {"href": re.compile(r'product\.dangdang\.com/\d{6,10}\.html')}):
+        for link in soup.find_all('a', {"href": re.compile(r'product\.dangdang\.com/\d{6,10}\.html$')}):
             href = link.get('href')
             if "http" not in href:
                 href = f"http:{href}"
             url_list.append(href)
 
-        for link in soup.find_all('a', {"href": re.compile(r'book\.dangdang\.com/\d{2}\.\d{2}\.htm')}):
+        for link in soup.find_all('a', {"href": re.compile(r'book\.dangdang\.com/\d{2}\.\d{2}\.htm$')}):
             href = link.get('href')
             url_list.append(href)
 
         for link in soup.find_all('a', {
-            "href": re.compile(r'category\.dangdang\.com/cp01\.41\.\d{2}\.\d{2}\.\d{2}\.\d{2}\.html')
+            "href": re.compile(r'category\.dangdang\.com/cp01\.41\.\d{2}\.\d{2}\.\d{2}\.\d{2}\.html$')
         }):
             href = link.get('href')
             url_list.append(href)
@@ -363,13 +366,20 @@ return scrollHeight;
             try:
                 self.load_page(book_url)
                 logger.info(f"Load Page {book_url} Success.")
+            except selenium.common.exceptions.InvalidArgumentException as e:
+                logger.error(e)
+                continue
             except Exception as e:
                 logger.exception(e)
                 logger.error(f"Load Page {book_url} Fail.")
                 self.driver.quit()
-                self.driver = webdriver.Chrome(options=self.options)
-                self.mongo_db.update_url(book_url)
+                if self.remote_uri:
+                    self.driver = webdriver.Remote(self.remote_uri, options=self.options)
+                else:
+                    self.driver = webdriver.Chrome(options=self.options)
                 continue
+            finally:
+                self.mongo_db.update_url(book_url)
 
             self.mongo_db.update_url(book_url)
 
