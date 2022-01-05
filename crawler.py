@@ -30,7 +30,7 @@ class BookCrawler(Thread):
         super().__init__()
         self.mongo_db = mongo_db
         self.options = webdriver.ChromeOptions()
-        # self.options.add_argument("--headless")
+        self.options.add_argument("--headless")
         if remote_uri:
             self.driver = webdriver.Remote(remote_uri, options=self.options)
         else:
@@ -83,17 +83,17 @@ class BookCrawler(Thread):
             By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/div[1]/div[1]/input"
         )
         username.send_keys("13883884201")
-        time.sleep(1)
+        time.sleep(0.5)
         password = self.driver.find_element(
             By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/div[2]/div[1]/input"
         )
         password.send_keys("tianjun223.")
-        time.sleep(1)
+        time.sleep(0.5)
         btn = self.driver.find_element(
             By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/a"
         )
         btn.click()
-        time.sleep(3)
+        time.sleep(1)
         # 是否需要滑块验证码
         try:
             slide = self.driver.find_element(
@@ -118,7 +118,7 @@ class BookCrawler(Thread):
                 self.refresh_slide()
                 continue
             self.sliding_btn(x)
-            time.sleep(3)
+            time.sleep(1)
             try:
                 error_div = self.driver.find_element(
                     By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/div[3]"
