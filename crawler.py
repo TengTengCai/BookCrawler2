@@ -76,7 +76,10 @@ class BookCrawler(Thread):
     def driver_init(self):
         proxy = Proxy({
             'proxyType': ProxyType.MANUAL,
-            "http": "http://t14145582297835:9sf1f1zs@tps333.kdlapi.com:15818"
+            "http": "http://t14145582297835:9sf1f1zs@tps333.kdlapi.com:15818",
+            "socksProxy": "socks5://tps333.kdlapi.com:20818",
+            "socksUsername": "t14145582297835",
+            "socksPassword": "9sf1f1zs",
         })
         # self.options = webdriver.ChromeOptions()
         # # self.options.add_argument("--headless")
