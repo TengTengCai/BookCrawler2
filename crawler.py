@@ -70,6 +70,7 @@ class BookCrawler(Thread):
         self.driver_init()
 
     def driver_init(self):
+        self.options = webdriver.ChromeOptions()
         self.options.add_argument("--headless")
         self.options.add_argument("--no-sandbox")
         self.options.add_argument("--disable-gpu")
