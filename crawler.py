@@ -284,23 +284,35 @@ return scrollHeight;
         book.price = soup.find("p", {"id": "dd-price"}).get_text(strip=True).replace("¥", "")
         book.original_price = soup.find("div", {"id": "original-price"}).get_text(strip=True).replace("¥", "")
 
-        editors_choice = soup.find("div", {"id": "abstract"})
-        if editors_choice is None:
+        try:
+            book.editors_choice = soup.find(
+                "div", {"id": "abstract"}
+            ).find(
+                "div", {"class": "descrip"}
+            ).get_text(strip=True)
+        except AttributeError as e:
+            logger.error(e)
             book.editors_choice = ""
-        else:
-            book.editors_choice = editors_choice.find("div", {"class": "descrip"}).get_text(strip=True)
 
-        content_validity = soup.find("div", {"id": "content"})
-        if content_validity is None:
+        try:
+            book.content_validity = soup.find(
+                "div", {"id": "content"}
+            ).find(
+                "div", {"class": "descrip"}
+            ).get_text(strip=True)
+        except AttributeError as e:
+            logger.error(e)
             book.content_validity = ""
-        else:
-            book.content_validity = content_validity.find("div", {"class": "descrip"}).get_text(strip=True)
 
-        about_author = soup.find("div", {"id": "authorIntroduction"})
-        if about_author is None:
+        try:
+            book.about_author = soup.find(
+                "div", {"id": "authorIntroduction"}
+            ).find(
+                "div", {"class": "descrip"}
+            ).get_text(strip=True)
+        except AttributeError as e:
+            logger.error(e)
             book.about_author = ""
-        else:
-            book.about_author = about_author.find("div", {"class": "descrip"}).get_text(strip=True)
 
         catalog = soup.find("textarea", {"id": "catalog-textarea"})
         if catalog is None:
@@ -313,12 +325,11 @@ return scrollHeight;
                     book.catalog = descrip.get_text(strip=True)
         else:
             book.catalog = catalog.get_text(strip=True)
-
-        media_reviews = soup.find("div", {"id": "mediaFeedback"})
-        if media_reviews is None:
+        try:
+            book.media_reviews = soup.find("div", {"id": "mediaFeedback"}).get_text(strip=True)
+        except AttributeError as e:
+            logger.error(e)
             book.media_reviews = ""
-        else:
-            book.media_reviews = media_reviews.get_text()
         return book
 
     def get_useful_url(self):
