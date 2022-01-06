@@ -1,0 +1,11 @@
+mongo:
+  uri: "mongodb://tianjun:*****@120.25.170.193:27017/"
+dangdang:
+  username: ""
+  password: ""
+baidu:
+  username: ""
+  password: ""
+crawler:
+  thread: 5
+  remote: "http://selenium:4444"
