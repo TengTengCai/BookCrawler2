@@ -96,10 +96,11 @@ class BookCrawler(Thread):
         #     self.driver = webdriver.Chrome(options=self.options)
         self.options = webdriver.FirefoxOptions()
         self.options.headless = True
+        self.options.proxy = proxy
         if self.remote_uri:
-            self.driver = webdriver.Remote(self.remote_uri, proxy=proxy, options=self.options)
+            self.driver = webdriver.Remote(self.remote_uri, options=self.options)
         else:
-            self.driver = webdriver.Firefox(options=self.options, proxy=proxy)
+            self.driver = webdriver.Firefox(options=self.options)
 
     def is_login(self):
         p = re.compile(r"login\.dangdang\.com")
