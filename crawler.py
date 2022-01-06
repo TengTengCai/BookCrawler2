@@ -303,7 +303,7 @@ return scrollHeight;
         page_source = self.driver.page_source
         # logger.debug(f"Status {self.driver.} Request {}")
         logger.info(f"Page Source {url} Content Length: {len(page_source)}, {self.driver.title}")
-        if len(page_source) < 3280:
+        if len(page_source) < 4000:
             raise Exception("The IP cannot be used and should be replaced")
         return page_source
 
