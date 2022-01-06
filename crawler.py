@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class IPProxy(object):
-    URL = "http://dps.kdlapi.com/api/getdps/?orderid=994145003309922&num=10&pt=1&format=json&sep=1"
+    URL = "http://dps.kdlapi.com/api/getdps/?orderid=994145003309922&num=2&pt=1&format=json&sep=1"
 
     def __init__(self):
         self.http_list = []
