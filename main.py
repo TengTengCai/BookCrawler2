@@ -20,7 +20,7 @@ def main():
     crawler_list = []
     try:
         for _ in range(cfg.thread):
-            bc = BookCrawler(mongo_db, cfg.dangdang, cfg.baidu, cfg.remote)
+            bc = BookCrawler(mongo_db, ip_proxy, cfg.dangdang, cfg.baidu, cfg.remote)
             crawler_list.append(bc)
             bc.start()
             bc.join()
