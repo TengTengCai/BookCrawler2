@@ -33,7 +33,7 @@ class BookCrawler(Thread):
         self.dangdang = dangdang
         self.baidu = baidu
         self.options = webdriver.ChromeOptions()
-        self.options.add_argument("--headless")
+        # self.options.add_argument("--headless")
         self.remote_uri = remote_uri
         if self.remote_uri:
             self.driver = webdriver.Remote(self.remote_uri, options=self.options)
@@ -239,6 +239,7 @@ return scrollHeight;
 
     def parser(self, url):
         page_source = self.driver.page_source
+        logger.info(f"Page Source {url} Content Length: {len(page_source)}")
         soup = BeautifulSoup(page_source, "lxml")
         breadcrumb_div = soup.find("div", {"id": "breadcrumb"})
         if breadcrumb_div is None:
