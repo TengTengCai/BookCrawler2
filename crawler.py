@@ -27,10 +27,13 @@ logger = logging.getLogger(__name__)
 
 
 class IPProxy(object):
-    URL = "https://dps.kdlapi.com/api/getdps/?orderid=994145003309922&num=10&pt=1&format=json&sep=1"
+    URL = "https://dps.kdlapi.com/api/getdps/?orderid=994145003309922&num=2&pt=1&format=json&sep=1"
 
     def __init__(self):
-        self.proxy_list = []
+        self.http_list = []
+        self.https_list = []
+        self.username = "1021766585"
+        self.password = "6hkkxf6w"
         self.get_ip_list()
 
     def get_ip_list(self):
@@ -48,13 +51,20 @@ class IPProxy(object):
             logger.error(e)
             return
         for ip in proxy_list:
-            # ip = f"http://{ip}"
-            self.proxy_list.append(ip)
+            url = f"http://{self.username}:{self.password}@{ip}"
+            self.http_list.append(url)
+            url = f"https://{self.username}:{self.password}@{ip}"
+            self.https_list.append(url)
 
-    def get_one_proxy(self):
-        if len(self.proxy_list) == 0:
+    def get_http_proxy(self):
+        if len(self.http_list) == 0:
             self.get_ip_list()
-        return self.proxy_list.pop()
+        return self.http_list.pop()
+
+    def get_https_proxy(self):
+        if len(self.http_list) == 0:
+            self.get_ip_list()
+        return self.https_list.pop()
 
 
 class BookCrawler(Thread):
@@ -71,11 +81,12 @@ class BookCrawler(Thread):
 
     def driver_init(self):
         self.options = webdriver.ChromeOptions()
-        self.options.add_argument("--headless")
+        # self.options.add_argument("--headless")
         self.options.add_argument("--no-sandbox")
         self.options.add_argument("--disable-gpu")
-        self.options.add_argument("disable-infobars")
-        self.options.add_argument(f"--proxy-server={self.ip_proxy.get_one_proxy()}")
+        self.options.add_argument("--disable-infobars")
+        self.options.add_argument(f"--proxy-server={self.ip_proxy.get_http_proxy()}")
+        # self.options.add_argument(f"--proxy-server={self.ip_proxy.get_https_proxy()}")
         self.options.add_argument("--ignore-certificate-errors")
         if self.remote_uri:
             self.driver = webdriver.Remote(self.remote_uri, options=self.options)
