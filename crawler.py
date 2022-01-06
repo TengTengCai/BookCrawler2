@@ -204,15 +204,15 @@ class BookCrawler(Thread):
                 executor.submit(self.mongo_db.add_url, i)
 
     def load_page(self, url):
+        url = url.replace("?point=comment_point", "")
         self.driver.get(url)
-        if self.is_login():
-            if os.path.exists("cookies.pkl"):
-                cookies = pickle.load(open("cookies.pkl", "rb"))
-                for cookie in cookies:
-                    try:
-                        self.driver.add_cookie(cookie)
-                    except Exception as e:
-                        logger.error(e)
+        if self.is_login() and os.path.exists("cookies.pkl"):
+            cookies = pickle.load(open("cookies.pkl", "rb"))
+            for cookie in cookies:
+                try:
+                    self.driver.add_cookie(cookie)
+                except Exception as e:
+                    logger.error(e)
             self.driver.get(url)
         if self.is_login():
             self.do_login()
@@ -346,18 +346,21 @@ return scrollHeight;
             if len(href) < 30:
                 if "javascript" not in href:
                     url = "http://product.dangdang.com/" + href
+                    url = url.replace("?point=comment_point", "")
                     url_list.append(url)
 
         for link in soup.find_all('a', {"href": re.compile(r'^/[\d](.html)?')}):
             href = str(link.get('href')).split("#")[0]
             url = "http://product.dangdang.com" + href
+            url = url.replace("?point=comment_point", "")
             url_list.append(url)
 
         for link in soup.find_all('a', {"href": re.compile(r'product\.dangdang\.com/\d{6,10}\.html')}):
-            href = link.get('href')
-            if "http" not in href:
-                href = f"http:{href}"
-            url_list.append(href)
+            url = link.get('href')
+            if "http" not in url:
+                url = f"http:{url}"
+            url = url.replace("?point=comment_point", "")
+            url_list.append(url)
 
         for link in soup.find_all('a', {"href": re.compile(r'book\.dangdang\.com/\d{2}\.\d{2}\.htm')}):
             href = link.get('href')
