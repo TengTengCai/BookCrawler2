@@ -17,6 +17,7 @@ import requests
 import selenium.common.exceptions
 from cv2 import cv2
 from selenium import webdriver
+from selenium.webdriver import Proxy
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 
@@ -31,7 +32,6 @@ class IPProxy(object):
 
     def __init__(self):
         self.http_list = []
-        self.https_list = []
         self.username = "1021766585"
         self.password = "6hkkxf6w"
         self.get_ip_list()
@@ -53,8 +53,6 @@ class IPProxy(object):
         for ip in proxy_list:
             url = f"http://{self.username}:{self.password}@{ip}"
             self.http_list.append(url)
-            url = f"https://{self.username}:{self.password}@{ip}"
-            self.https_list.append(url)
 
     def get_http_proxy(self):
         if len(self.http_list) == 0:
@@ -80,16 +78,17 @@ class BookCrawler(Thread):
         self.driver_init()
 
     def driver_init(self):
+        proxy = Proxy({"http": "http://t14145582297835:9sf1f1zs@tps333.kdlapi.com:15818"})
         self.options = webdriver.ChromeOptions()
         self.options.add_argument("--headless")
         self.options.add_argument("--no-sandbox")
         self.options.add_argument("--disable-gpu")
         self.options.add_argument("--disable-infobars")
-        self.options.add_argument(f"--proxy-server={self.ip_proxy.get_http_proxy()}")
+        # self.options.add_argument(f"--proxy-server={self.ip_proxy.get_http_proxy()}")
         # self.options.add_argument(f"--proxy-server={self.ip_proxy.get_https_proxy()}")
         self.options.add_argument("--ignore-certificate-errors")
         if self.remote_uri:
-            self.driver = webdriver.Remote(self.remote_uri, options=self.options)
+            self.driver = webdriver.Remote(self.remote_uri, proxy=proxy, options=self.options)
         else:
             self.driver = webdriver.Chrome(options=self.options)
 
