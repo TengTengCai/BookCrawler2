@@ -94,7 +94,7 @@ class BookCrawler(Thread):
         # else:
         #     self.driver = webdriver.Chrome(options=self.options)
         self.options = webdriver.FirefoxOptions()
-        # self.options.headless = True
+        self.options.headless = True
         if self.remote_uri:
             self.driver = webdriver.Remote(self.remote_uri, proxy=proxy, options=self.options)
         else:
