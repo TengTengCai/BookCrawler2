@@ -2,6 +2,7 @@ FROM python:3.8.12-bullseye
 COPY . /code
 WORKDIR /code
 ENV PYTHONPATH=.
+ENV PATH=$PATH:/code/driver
 RUN cp ./sources.list /etc/apt/sources.list
 RUN apt-get update --fix-missing \
     && apt-get install --fix-missing ffmpeg libsm6 libxext6 systemd tzdata chromium-driver -y \

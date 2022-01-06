@@ -20,6 +20,7 @@ from selenium import webdriver
 from selenium.webdriver import Proxy
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
+from selenium.webdriver.common.proxy import ProxyType
 
 from config import Dangdang, Baidu
 from db_controller import MongoDataBase, Book
@@ -34,10 +35,10 @@ class IPProxy(object):
         self.http_list = []
         self.username = "1021766585"
         self.password = "6hkkxf6w"
-        self.get_ip_list()
+        # self.get_ip_list()
 
     def get_ip_list(self):
-        resp = requests.get(self.URL)
+        resp = requests.get(self.URL, verify=False)
         try:
             resp.raise_for_status()
             data = resp.json()
@@ -59,11 +60,6 @@ class IPProxy(object):
             self.get_ip_list()
         return self.http_list.pop()
 
-    def get_https_proxy(self):
-        if len(self.http_list) == 0:
-            self.get_ip_list()
-        return self.https_list.pop()
-
 
 class BookCrawler(Thread):
     def __init__(self, mongo_db: MongoDataBase, ip_proxy: IPProxy, dangdang: Dangdang, baidu: Baidu, remote_uri=''):
@@ -78,19 +74,28 @@ class BookCrawler(Thread):
         self.driver_init()
 
     def driver_init(self):
-        proxy = Proxy({"http": "http://t14145582297835:9sf1f1zs@tps333.kdlapi.com:15818"})
-        self.options = webdriver.ChromeOptions()
-        self.options.add_argument("--headless")
-        self.options.add_argument("--no-sandbox")
-        self.options.add_argument("--disable-gpu")
-        self.options.add_argument("--disable-infobars")
-        # self.options.add_argument(f"--proxy-server={self.ip_proxy.get_http_proxy()}")
-        # self.options.add_argument(f"--proxy-server={self.ip_proxy.get_https_proxy()}")
-        self.options.add_argument("--ignore-certificate-errors")
+        proxy = Proxy({
+            'proxyType': ProxyType.MANUAL,
+            "http": "http://t14145582297835:9sf1f1zs@tps333.kdlapi.com:15818"
+        })
+        # self.options = webdriver.ChromeOptions()
+        # # self.options.add_argument("--headless")
+        # self.options.add_argument("--no-sandbox")
+        # self.options.add_argument("--disable-gpu")
+        # self.options.add_argument("--disable-infobars")
+        # self.options.add_argument(f"--proxy-server=http://t14145582297835:9sf1f1zs@tps333.kdlapi.com:15818")
+        # # self.options.add_argument(f"--proxy-server={self.ip_proxy.get_https_proxy()}")
+        # self.options.add_argument("--ignore-certificate-errors")
+        # if self.remote_uri:
+        #     self.driver = webdriver.Remote(self.remote_uri, proxy=proxy, options=self.options)
+        # else:
+        #     self.driver = webdriver.Chrome(options=self.options)
+        self.options = webdriver.FirefoxOptions()
+        # self.options.headless = True
         if self.remote_uri:
             self.driver = webdriver.Remote(self.remote_uri, proxy=proxy, options=self.options)
         else:
-            self.driver = webdriver.Chrome(options=self.options)
+            self.driver = webdriver.Firefox(options=self.options, proxy=proxy)
 
     def is_login(self):
         p = re.compile(r"login\.dangdang\.com")
@@ -287,7 +292,7 @@ return scrollHeight;
             time.sleep(0.05)  # 休眠等待浏览器执行
         page_source = self.driver.page_source
         # logger.debug(f"Status {self.driver.} Request {}")
-        logger.info(f"Page Source {url} Content Length: {len(page_source)}")
+        logger.info(f"Page Source {url} Content Length: {len(page_source)}, {self.driver.title}")
         if len(page_source) < 3280:
             raise Exception("The IP cannot be used and should be replaced")
         return page_source
