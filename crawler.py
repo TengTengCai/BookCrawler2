@@ -26,15 +26,52 @@ from db_controller import MongoDataBase, Book
 logger = logging.getLogger(__name__)
 
 
+class IPProxy(object):
+    URL = "https://dps.kdlapi.com/api/getdps/?orderid=994145003309922&num=10&pt=1&format=json&sep=1"
+
+    def __init__(self):
+        self.proxy_list = []
+        self.get_ip_list()
+
+    def get_ip_list(self):
+        resp = requests.get(self.URL)
+        try:
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            logger.error(e)
+            return
+
+        try:
+            proxy_list = data.get("data", dict()).get("proxy_list", [])
+        except AttributeError as e:
+            logger.error(e)
+            return
+        for ip in proxy_list:
+            # ip = f"http://{ip}"
+            self.proxy_list.append(ip)
+
+    def get_one_proxy(self):
+        if len(self.proxy_list) == 0:
+            self.get_ip_list()
+        return self.proxy_list.pop()
+
+
 class BookCrawler(Thread):
-    def __init__(self, mongo_db: MongoDataBase, dangdang: Dangdang, baidu: Baidu, remote_uri=''):
+    def __init__(self, mongo_db: MongoDataBase, ip_proxy: IPProxy, dangdang: Dangdang, baidu: Baidu, remote_uri=''):
         super().__init__()
         self.mongo_db = mongo_db
+        self.ip_proxy = ip_proxy
         self.dangdang = dangdang
         self.baidu = baidu
-        self.options = webdriver.ChromeOptions()
-        # self.options.add_argument("--headless")
         self.remote_uri = remote_uri
+        self.options = None
+        self.driver = None
+        self.driver_init()
+
+    def driver_init(self):
+        self.options.add_argument("--headless")
+        self.options.add_argument(f"--proxy-server={self.ip_proxy.get_one_proxy()}")
         if self.remote_uri:
             self.driver = webdriver.Remote(self.remote_uri, options=self.options)
         else:
@@ -235,11 +272,13 @@ return scrollHeight;
             time.sleep(0.05)  # 休眠等待浏览器执行
         page_source = self.driver.page_source
         # logger.debug(f"Status {self.driver.} Request {}")
+        logger.info(f"Page Source {url} Content Length: {len(page_source)}")
+        if len(page_source) < 3280:
+            raise Exception("The IP cannot be used and should be replaced")
         return page_source
 
     def parser(self, url):
         page_source = self.driver.page_source
-        logger.info(f"Page Source {url} Content Length: {len(page_source)}")
         soup = BeautifulSoup(page_source, "lxml")
         breadcrumb_div = soup.find("div", {"id": "breadcrumb"})
         if breadcrumb_div is None:
@@ -388,10 +427,7 @@ return scrollHeight;
                 logger.exception(e)
                 logger.error(f"Load Page {book_url} Fail.")
                 self.driver.quit()
-                if self.remote_uri:
-                    self.driver = webdriver.Remote(self.remote_uri, options=self.options)
-                else:
-                    self.driver = webdriver.Chrome(options=self.options)
+                self.driver_init()
                 continue
             finally:
                 self.mongo_db.update_url(book_url)

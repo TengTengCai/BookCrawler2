@@ -2,7 +2,7 @@ import argparse
 import logging
 
 from config import Config
-from crawler import BookCrawler
+from crawler import BookCrawler, IPProxy
 from db_controller import MongoDataBase
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -16,6 +16,7 @@ def main():
     if args.remote:
         cfg.remote = args.remote
     mongo_db = MongoDataBase(cfg.mongo_uri)
+    ip_proxy = IPProxy()
     crawler_list = []
     try:
         for _ in range(cfg.thread):
