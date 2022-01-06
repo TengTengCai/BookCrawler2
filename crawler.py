@@ -18,19 +18,20 @@ import selenium.common.exceptions
 from cv2 import cv2
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from bs4 import BeautifulSoup
 
-
+from config import Dangdang, Baidu
 from db_controller import MongoDataBase, Book
 
 logger = logging.getLogger(__name__)
 
 
 class BookCrawler(Thread):
-    def __init__(self, mongo_db: MongoDataBase, remote_uri=''):
+    def __init__(self, mongo_db: MongoDataBase, dangdang: Dangdang, baidu: Baidu, remote_uri=''):
         super().__init__()
         self.mongo_db = mongo_db
+        self.dangdang = dangdang
+        self.baidu = baidu
         self.options = webdriver.ChromeOptions()
         self.options.add_argument("--headless")
         self.remote_uri = remote_uri
@@ -55,11 +56,11 @@ class BookCrawler(Thread):
         username = self.driver.find_element(
             By.XPATH, '//*[@id="TANGRAM_3__userName"]'
         )
-        username.send_keys("13883884201")
+        username.send_keys(self.baidu.username)
         password = self.driver.find_element(
             By.XPATH, '//*[@id="TANGRAM_3__password"]'
         )
-        password.send_keys("tianjun223.")
+        password.send_keys(self.baidu.password)
         btn = self.driver.find_element(
             By.XPATH, '//*[@id="TANGRAM_3__submit"]'
         )
@@ -86,12 +87,12 @@ class BookCrawler(Thread):
         username = self.driver.find_element(
             By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/div[1]/div[1]/input"
         )
-        username.send_keys("13883884201")
+        username.send_keys(self.dangdang.username)
         time.sleep(0.5)
         password = self.driver.find_element(
             By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/div[2]/div[1]/input"
         )
-        password.send_keys("tianjun223.")
+        password.send_keys(self.dangdang.password)
         time.sleep(0.5)
         btn = self.driver.find_element(
             By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/a"
@@ -191,7 +192,6 @@ class BookCrawler(Thread):
 
     def get_url(self):
         # return "http://product.dangdang.com/29333681.html"
-        # return "http://product.dangdang.com/410267114.html"
         url = self.mongo_db.get_url()
         if url is None:
             url = "http://book.dangdang.com/children"
