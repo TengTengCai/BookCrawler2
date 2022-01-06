@@ -71,7 +71,11 @@ class BookCrawler(Thread):
 
     def driver_init(self):
         self.options.add_argument("--headless")
+        self.options.add_argument("--no-sandbox")
+        self.options.add_argument("--disable-gpu")
+        self.options.add_argument("disable-infobars")
         self.options.add_argument(f"--proxy-server={self.ip_proxy.get_one_proxy()}")
+        self.options.add_argument("--ignore-certificate-errors")
         if self.remote_uri:
             self.driver = webdriver.Remote(self.remote_uri, options=self.options)
         else:
