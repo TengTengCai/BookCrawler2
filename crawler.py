@@ -6,7 +6,6 @@
 # @Software: PyCharm
 import base64
 import logging
-import os.path
 import pickle
 import random
 import re
@@ -53,7 +52,7 @@ class IPProxy(object):
                 continue
             else:
                 for ip in proxy_list:
-                    url = f"{self.username}:{self.password}@{ip}"
+                    # url = f"{self.username}:{self.password}@{ip}"
                     self.http_list.append(ip)
                 break
 
@@ -77,10 +76,10 @@ class BookCrawler(Thread):
 
     def driver_init(self):
         if random.randint(0, 100) % 2 == 0:
-            proxy_author = self.ip_proxy.proxy_author
+            # proxy_author = self.ip_proxy.proxy_author
             url = self.ip_proxy.get_http_proxy()
         else:
-            proxy_author = base64.b64encode('t14145582297835:9sf1f1zs'.encode('utf-8'))
+            # proxy_author = base64.b64encode('t14145582297835:9sf1f1zs'.encode('utf-8'))
             url = "tps333.kdlapi.com:15818"
             # url = self.ip_proxy.get_http_proxy()
         # self.options = webdriver.ChromeOptions()
@@ -357,8 +356,21 @@ return scrollHeight;
                 book.publishing = item.get_text(strip=True).replace("出版社:", "")
             elif "出版时间" in str(item):
                 book.publishing_time = item.get_text(strip=True).replace("出版时间:", "")
-        book.price = soup.find("p", {"id": "dd-price"}).get_text(strip=True).replace("¥", "")
-        book.original_price = soup.find("div", {"id": "original-price"}).get_text(strip=True).replace("¥", "")
+
+        try:
+            book.price = soup.find(
+                "p", {"id": "dd-price"}
+            ).get_text(strip=True).replace("¥", "")
+        except AttributeError as e:
+            logger.error(e)
+            book.price = ''
+        try:
+            book.original_price = soup.find(
+                "div", {"id": "original-price"}
+            ).get_text(strip=True).replace("¥", "")
+        except AttributeError as e:
+            logger.error(e)
+            book.original_price = ''
 
         try:
             book.editors_choice = soup.find(
