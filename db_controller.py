@@ -64,7 +64,7 @@ class MongoDataBase(object):
             logger.exception(e)
 
     def get_url(self):
-        num = randint(1, 100)  # 随机数
+        num = randint(1, 10)  # 随机数
         try:
             result = self.urls.find({'isExist': 'false'}).skip(num).limit(1)  # 跳跃式获取数据
             return result[0]['url']  # 返回对应的URL地址
