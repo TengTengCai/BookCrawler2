@@ -65,6 +65,7 @@ class IPProxy(object):
 class BookCrawler(Thread):
     def __init__(self, mongo_db: MongoDataBase, ip_proxy: IPProxy, dangdang: Dangdang, baidu: Baidu, remote_uri=''):
         super().__init__()
+        self._running = True
         self.mongo_db = mongo_db
         self.ip_proxy = ip_proxy
         self.dangdang = dangdang
@@ -103,6 +104,10 @@ class BookCrawler(Thread):
                 self.driver = webdriver.Firefox(options=self.options)
         except Exception as e:
             logger.exception(e)
+            self.terminate()
+
+    def terminate(self):
+        self._running = False
 
     def is_login(self):
         p = re.compile(r"login\.dangdang\.com")
@@ -457,7 +462,7 @@ return scrollHeight;
         return list(url_list)
 
     def run(self):
-        while True:
+        while self._running:
             book_url = self.get_url()
             try:
                 self.load_page(book_url)
