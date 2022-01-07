@@ -1,5 +1,6 @@
 import argparse
 import logging
+import time
 
 from config import Config
 from crawler import BookCrawler, IPProxy
@@ -35,6 +36,7 @@ def main():
                 crawler_list.append(new_bc)
                 new_bc.start()
                 crawler_list.remove(bc)
+            time.sleep(10)
     except KeyboardInterrupt as e:
         logger.exception(e)
 
