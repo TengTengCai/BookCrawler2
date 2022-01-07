@@ -18,12 +18,23 @@ def main():
     mongo_db = MongoDataBase(cfg.mongo_uri)
     ip_proxy = IPProxy()
     crawler_list = []
+    for _ in range(cfg.thread):
+        bc = BookCrawler(mongo_db, ip_proxy, cfg.dangdang, cfg.baidu, cfg.remote)
+        crawler_list.append(bc)
+        bc.start()
+
     try:
-        for _ in range(cfg.thread):
-            bc = BookCrawler(mongo_db, ip_proxy, cfg.dangdang, cfg.baidu, cfg.remote)
-            crawler_list.append(bc)
-            bc.start()
-            bc.join()
+        while True:
+            delete_list = []
+            for bc in crawler_list:
+                if not bc.is_alive():
+                    delete_list.append(bc)
+            logger.info(f"Delete {len(delete_list)} BookCrawler.")
+            for bc in delete_list:
+                new_bc = BookCrawler(mongo_db, ip_proxy, cfg.dangdang, cfg.baidu, cfg.remote)
+                crawler_list.append(new_bc)
+                new_bc.start()
+                crawler_list.remove(bc)
     except KeyboardInterrupt as e:
         logger.exception(e)
 

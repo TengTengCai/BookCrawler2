@@ -96,10 +96,13 @@ class BookCrawler(Thread):
         self.options.proxy = proxy
         self.options.set_preference('permissions.default.stylesheet', 2)
         self.options.set_preference('permissions.default.image', 2)
-        if self.remote_uri:
-            self.driver = webdriver.Remote(self.remote_uri, options=self.options)
-        else:
-            self.driver = webdriver.Firefox(options=self.options)
+        try:
+            if self.remote_uri:
+                self.driver = webdriver.Remote(self.remote_uri, options=self.options)
+            else:
+                self.driver = webdriver.Firefox(options=self.options)
+        except Exception as e:
+            logger.exception(e)
 
     def is_login(self):
         p = re.compile(r"login\.dangdang\.com")
