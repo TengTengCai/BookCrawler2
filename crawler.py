@@ -4,6 +4,7 @@
 # @Author  : TianJun
 # @File    : crawler.py
 # @Software: PyCharm
+import base64
 import logging
 import os.path
 import pickle
@@ -36,25 +37,25 @@ class IPProxy(object):
         self.http_list = []
         self.username = "1021766585"
         self.password = "6hkkxf6w"
+        self.proxy_author = base64.b64encode(f'{self.username}:{self.username}'.encode('utf-8'))
         self.get_ip_list()
 
     def get_ip_list(self):
-        resp = requests.get(self.URL, verify=False)
-        try:
-            resp.raise_for_status()
-            data = resp.json()
-        except Exception as e:
-            logger.error(e)
-            return
-
-        try:
-            proxy_list = data.get("data", dict()).get("proxy_list", [])
-        except AttributeError as e:
-            logger.error(e)
-            return
-        for ip in proxy_list:
-            url = f"http://{self.username}:{self.password}@{ip}"
-            self.http_list.append(url)
+        while True:
+            resp = requests.get(self.URL, verify=False)
+            try:
+                resp.raise_for_status()
+                data = resp.json()
+                proxy_list = data.get("data", dict()).get("proxy_list", [])
+            except Exception as e:
+                logger.error(e)
+                time.sleep(3)
+                continue
+            else:
+                for ip in proxy_list:
+                    url = f"{self.username}:{self.password}@{ip}"
+                    self.http_list.append(ip)
+                break
 
     def get_http_proxy(self):
         if len(self.http_list) == 0:
@@ -75,32 +76,33 @@ class BookCrawler(Thread):
         self.driver_init()
 
     def driver_init(self):
-        if random.randint(0, 100)//2 == 0:
+        if random.randint(0, 100) % 2 == 0:
+            proxy_author = self.ip_proxy.proxy_author
             url = self.ip_proxy.get_http_proxy()
         else:
-            url = "http://t14145582297835:9sf1f1zs@tps333.kdlapi.com:15818"
+            proxy_author = base64.b64encode('t14145582297835:9sf1f1zs'.encode('utf-8'))
+            url = "tps333.kdlapi.com:15818"
+            # url = self.ip_proxy.get_http_proxy()
+        # self.options = webdriver.ChromeOptions()
+        # self.options.add_argument("--headless")
+        # self.options.add_argument(f"--proxy-server={url}")
+        # self.options.add_argument(f"--proxy-server={self.ip_proxy.get_https_proxy()}")
+        # if self.remote_uri:
+        #     self.driver = webdriver.Remote(self.remote_uri, options=self.options, keep_alive=True)
+        # else:
+        #     self.driver = webdriver.Chrome(options=self.options, keep_alive=True)
         proxy = Proxy({
             'proxyType': ProxyType.MANUAL,
-            "http": url,
+            "httpProxy": url,
             # "sslProxy": "http://t14145582297835:9sf1f1zs@tps333.kdlapi.com:15818",
             # "socksProxy": "socks5://tps333.kdlapi.com:20818",
             # "socksUsername": "t14145582297835",
             # "socksPassword": "9sf1f1zs",
         })
-        # self.options = webdriver.ChromeOptions()
-        # # self.options.add_argument("--headless")
-        # self.options.add_argument("--no-sandbox")
-        # self.options.add_argument("--disable-gpu")
-        # self.options.add_argument("--disable-infobars")
-        # self.options.add_argument(f"--proxy-server=http://t14145582297835:9sf1f1zs@tps333.kdlapi.com:15818")
-        # # self.options.add_argument(f"--proxy-server={self.ip_proxy.get_https_proxy()}")
-        # self.options.add_argument("--ignore-certificate-errors")
-        # if self.remote_uri:
-        #     self.driver = webdriver.Remote(self.remote_uri, proxy=proxy, options=self.options)
-        # else:
-        #     self.driver = webdriver.Chrome(options=self.options)
         self.options = webdriver.FirefoxOptions()
-        self.options.headless = True
+        # self.options.headless = True
+        # self.options.add_argument(f"Proxy-Authorization=Basic {proxy_author}")
+        # self.options.set_capability("Proxy-Authorization", f"Basic {proxy_author}")
         self.options.proxy = proxy
         if self.remote_uri:
             self.driver = webdriver.Remote(self.remote_uri, options=self.options)
@@ -306,6 +308,8 @@ return scrollHeight;
         # logger.debug(f"Status {self.driver.} Request {}")
         logger.info(f"Page Source {url} Content Length: {len(page_source)}, {self.driver.title}")
         if len(page_source) < 4000:
+            with open('temp.html', 'w') as f:
+                f.write(page_source)
             raise Exception("The IP cannot be used and should be replaced")
         return page_source
 
