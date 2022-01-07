@@ -95,6 +95,8 @@ class BookCrawler(Thread):
         self.options = webdriver.FirefoxOptions()
         self.options.headless = True
         self.options.proxy = proxy
+        self.options.set_preference('http.response.timeout', 10)
+        self.options.set_preference('dom.max_script_run_time', 5)
         self.options.set_preference('permissions.default.stylesheet', 2)
         self.options.set_preference('permissions.default.image', 2)
         try:
