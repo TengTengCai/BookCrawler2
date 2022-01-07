@@ -100,7 +100,7 @@ class BookCrawler(Thread):
             # "socksPassword": "9sf1f1zs",
         })
         self.options = webdriver.FirefoxOptions()
-        # self.options.headless = True
+        self.options.headless = True
         # self.options.add_argument(f"Proxy-Authorization=Basic {proxy_author}")
         # self.options.set_capability("Proxy-Authorization", f"Basic {proxy_author}")
         self.options.proxy = proxy
