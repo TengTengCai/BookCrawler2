@@ -104,6 +104,8 @@ class BookCrawler(Thread):
         # self.options.add_argument(f"Proxy-Authorization=Basic {proxy_author}")
         # self.options.set_capability("Proxy-Authorization", f"Basic {proxy_author}")
         self.options.proxy = proxy
+        self.options.set_preference('permissions.default.stylesheet', 2)
+        self.options.set_preference('permissions.default.image', 2)
         if self.remote_uri:
             self.driver = webdriver.Remote(self.remote_uri, options=self.options)
         else:
@@ -308,8 +310,6 @@ return scrollHeight;
         # logger.debug(f"Status {self.driver.} Request {}")
         logger.info(f"Page Source {url} Content Length: {len(page_source)}, {self.driver.title}")
         if len(page_source) < 4000:
-            with open('temp.html', 'w') as f:
-                f.write(page_source)
             raise Exception("The IP cannot be used and should be replaced")
         return page_source
 
