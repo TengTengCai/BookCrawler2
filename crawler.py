@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class IPProxy(object):
-    URL = "http://dps.kdlapi.com/api/getdps/?orderid=994145003309922&num=2&pt=1&format=json&sep=1"
+    URL = "http://dps.kdlapi.com/api/getdps/?orderid=964154501989611&num=2&pt=1&format=json&sep=1"
 
     def __init__(self):
         self.http_list = []
@@ -76,12 +76,9 @@ class BookCrawler(Thread):
 
     def driver_init(self):
         if random.randint(0, 100) % 2 == 0:
-            # proxy_author = self.ip_proxy.proxy_author
             url = self.ip_proxy.get_http_proxy()
         else:
-            # proxy_author = base64.b64encode('t14145582297835:9sf1f1zs'.encode('utf-8'))
             url = "tps333.kdlapi.com:15818"
-            # url = self.ip_proxy.get_http_proxy()
         # self.options = webdriver.ChromeOptions()
         # self.options.add_argument("--headless")
         # self.options.add_argument(f"--proxy-server={url}")
@@ -93,15 +90,9 @@ class BookCrawler(Thread):
         proxy = Proxy({
             'proxyType': ProxyType.MANUAL,
             "httpProxy": url,
-            # "sslProxy": "http://t14145582297835:9sf1f1zs@tps333.kdlapi.com:15818",
-            # "socksProxy": "socks5://tps333.kdlapi.com:20818",
-            # "socksUsername": "t14145582297835",
-            # "socksPassword": "9sf1f1zs",
         })
         self.options = webdriver.FirefoxOptions()
         self.options.headless = True
-        # self.options.add_argument(f"Proxy-Authorization=Basic {proxy_author}")
-        # self.options.set_capability("Proxy-Authorization", f"Basic {proxy_author}")
         self.options.proxy = proxy
         self.options.set_preference('permissions.default.stylesheet', 2)
         self.options.set_preference('permissions.default.image', 2)
