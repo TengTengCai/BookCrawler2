@@ -480,8 +480,6 @@ return scrollHeight;
             finally:
                 self.mongo_db.update_url(book_url)
 
-            self.mongo_db.update_url(book_url)
-
             book = self.parser(book_url)
             if book is not None:
                 self.mongo_db.insert_book(book)
