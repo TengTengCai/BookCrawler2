@@ -115,6 +115,7 @@ class BookCrawler(Thread):
         return False
 
     def do_baidu_login(self):
+        logger.info("Do Baidu Login.")
         baidu = self.driver.find_element(By.XPATH, "/html/body/div/div[2]/div/div/div[2]/a[5]/img")
         baidu.click()
         windows = self.driver.window_handles
@@ -151,6 +152,7 @@ class BookCrawler(Thread):
             pickle.dump(cookies, open("cookies.pkl", "wb"))
 
     def do_login(self):
+        logger.info("Do Login.")
         username = self.driver.find_element(
             By.XPATH, "/html/body/div/div[2]/div/div/div[1]/div/div/div[3]/div/div[1]/div[1]/input"
         )
@@ -273,14 +275,14 @@ class BookCrawler(Thread):
     def load_page(self, url):
         url = url.replace("?point=comment_point", "")
         self.driver.get(url)
-        if self.is_login() and os.path.exists("cookies.pkl"):
-            cookies = pickle.load(open("cookies.pkl", "rb"))
-            for cookie in cookies:
-                try:
-                    self.driver.add_cookie(cookie)
-                except Exception as e:
-                    logger.error(e)
-            self.driver.get(url)
+        # if self.is_login() and os.path.exists("cookies.pkl"):
+        #     cookies = pickle.load(open("cookies.pkl", "rb"))
+        #     for cookie in cookies:
+        #         try:
+        #             self.driver.add_cookie(cookie)
+        #         except Exception as e:
+        #             logger.error(e)
+        #     self.driver.get(url)
         if self.is_login():
             self.do_login()
         if self.is_login():
