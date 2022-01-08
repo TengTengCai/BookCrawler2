@@ -479,7 +479,7 @@ return scrollHeight;
             except Exception as e:
                 logger.exception(e)
                 logger.error(f"Load Page {book_url} Fail.")
-                self.driver.quit()
+                self.driver.close()
                 self.driver_init()
                 continue
             finally:
