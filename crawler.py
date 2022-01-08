@@ -79,36 +79,36 @@ class BookCrawler(Thread):
         if random.randint(0, 100) % 2 == 0:
             url = self.ip_proxy.get_http_proxy()
         else:
-            url = self.ip_proxy.get_http_proxy()
-            # url = "tps333.kdlapi.com:15818"
-        # self.options = webdriver.ChromeOptions()
-        # self.options.add_argument("--headless")
-        # self.options.add_argument(f"--proxy-server={url}")
-        # self.options.add_argument(f"--proxy-server={self.ip_proxy.get_https_proxy()}")
-        # if self.remote_uri:
-        #     self.driver = webdriver.Remote(self.remote_uri, options=self.options, keep_alive=True)
-        # else:
-        #     self.driver = webdriver.Chrome(options=self.options, keep_alive=True)
-        proxy = Proxy({
-            'proxyType': ProxyType.MANUAL,
-            "httpProxy": url,
-        })
-        self.options = webdriver.FirefoxOptions()
-        self.options.headless = True
-        self.options.proxy = proxy
-        self.options.set_preference('http.response.timeout', 10)
-        self.options.set_preference('dom.max_script_run_time', 5)
-        self.options.set_preference('permissions.default.stylesheet', 2)
-        self.options.set_preference('permissions.default.image', 2)
-        try:
-            if self.remote_uri:
-                self.driver = webdriver.Remote(self.remote_uri, options=self.options)
-            else:
-                self.driver = webdriver.Firefox(options=self.options)
-            self.driver.set_page_load_timeout(30)
-        except Exception as e:
-            logger.exception(e)
-            self.terminate()
+            # url = self.ip_proxy.get_http_proxy()
+            url = "tps333.kdlapi.com:15818"
+        self.options = webdriver.ChromeOptions()
+        self.options.add_argument("--headless")
+        self.options.add_argument(f"--proxy-server=http://{url}")
+        if self.remote_uri:
+            self.driver = webdriver.Remote(self.remote_uri, options=self.options)
+        else:
+            self.driver = webdriver.Chrome(options=self.options)
+        # proxy = Proxy({
+        #     'proxyType': ProxyType.MANUAL,
+        #     "httpProxy": url,
+        # })
+        # self.options = webdriver.FirefoxOptions()
+        # self.options.headless = True
+        # self.options.proxy = proxy
+        # self.options.set_preference('http.response.timeout', 10)
+        # self.options.set_preference('dom.max_script_run_time', 5)
+        # self.options.set_preference('permissions.default.stylesheet', 2)
+        # self.options.set_preference('permissions.default.image', 2)
+        # try:
+        #     if self.remote_uri:
+        #         self.driver = webdriver.Remote(self.remote_uri, options=self.options)
+        #     else:
+        #         self.driver = webdriver.Firefox(options=self.options)
+        #     self.driver.set_page_load_timeout(30)
+        #     self.driver.set_script_timeout(30)
+        # except Exception as e:
+        #     logger.exception(e)
+        #     self.terminate()
 
     def terminate(self):
         self._running = False
@@ -479,9 +479,8 @@ return scrollHeight;
             except Exception as e:
                 logger.exception(e)
                 logger.error(f"Load Page {book_url} Fail.")
-                self.driver.close()
+                self.driver.quit()
                 self.driver_init()
-                continue
             finally:
                 self.mongo_db.update_url(book_url)
 
