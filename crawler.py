@@ -100,6 +100,7 @@ class BookCrawler(Thread):
         self.options = None
         self.driver = None
         self.driver_init()
+        self.proxies = None
 
     def driver_init(self):
         if random.randint(0, 100) % 2 == 0:
@@ -107,6 +108,10 @@ class BookCrawler(Thread):
         else:
             url = self.ip_proxy.get_http_proxy()
             # url = "tps333.kdlapi.com:15818"
+        self.proxies = {
+            "http": f"http://{url}/",
+            "https": f"http://{url}/"
+        }
         # self.options = webdriver.ChromeOptions()
         # self.options.add_argument("--headless")
         # self.options.add_argument(f"--proxy-server=http://{url}")
@@ -312,6 +317,12 @@ class BookCrawler(Thread):
 
     def load_page(self, url):
         url = url.replace("?point=comment_point", "")
+        try:
+            resp = requests.get(url, timeout=10, proxies=self.proxies)
+            resp.raise_for_status()
+        except requests.exceptions.RequestException:
+            self.mongo_db.update_url(url)
+            raise Exception(f"Request URL {url} is Fail.")
         self.driver.get(url)
         # if self.is_login() and os.path.exists("cookies.pkl"):
         #     cookies = pickle.load(open("cookies.pkl", "rb"))

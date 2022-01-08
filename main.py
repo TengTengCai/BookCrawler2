@@ -6,7 +6,7 @@ from config import Config
 from crawler import BookCrawler, IPProxy
 from db_controller import MongoDataBase
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s-%(name)s-%(levelname)s-%(lineno)d:\t %(message)s")
 logger = logging.getLogger(__name__)
 
 
