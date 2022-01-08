@@ -84,6 +84,11 @@ class BookCrawler(Thread):
         self.options = webdriver.ChromeOptions()
         self.options.add_argument("--headless")
         self.options.add_argument(f"--proxy-server=http://{url}")
+        self.options.add_experimental_option(
+            "prefs", {
+                "profile.managed_default_content_settings.images": 2,
+                'permissions.default.stylesheet': 2,
+            })
         if self.remote_uri:
             self.driver = webdriver.Remote(self.remote_uri, options=self.options)
         else:
