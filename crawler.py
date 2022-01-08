@@ -81,43 +81,41 @@ class BookCrawler(Thread):
         else:
             url = self.ip_proxy.get_http_proxy()
             # url = "tps333.kdlapi.com:15818"
-        self.options = webdriver.ChromeOptions()
-        self.options.add_argument("--headless")
-        self.options.add_argument(f"--proxy-server=http://{url}")
-        self.options.add_experimental_option(
-            "prefs", {
-                "profile.managed_default_content_settings.images": 2,
-                "profile.managed_default_content_settings.stylesheet": 2,
-            })
-        try:
-            if self.remote_uri:
-                self.driver = webdriver.Remote(self.remote_uri, options=self.options)
-            else:
-                self.driver = webdriver.Chrome(options=self.options)
-        except Exception as e:
-            logger.exception(e)
-            self.terminate()
-        # proxy = Proxy({
-        #     'proxyType': ProxyType.MANUAL,
-        #     "httpProxy": url,
-        # })
-        # self.options = webdriver.FirefoxOptions()
-        # self.options.headless = True
-        # self.options.proxy = proxy
-        # self.options.set_preference('http.response.timeout', 10)
-        # self.options.set_preference('dom.max_script_run_time', 5)
-        # self.options.set_preference('permissions.default.stylesheet', 2)
-        # self.options.set_preference('permissions.default.image', 2)
+        # self.options = webdriver.ChromeOptions()
+        # self.options.add_argument("--headless")
+        # self.options.add_argument(f"--proxy-server=http://{url}")
+        # self.options.add_experimental_option(
+        #     "prefs", {
+        #         "profile.managed_default_content_settings.images": 2,
+        #         "profile.managed_default_content_settings.stylesheet": 2,
+        #     })
         # try:
         #     if self.remote_uri:
         #         self.driver = webdriver.Remote(self.remote_uri, options=self.options)
         #     else:
-        #         self.driver = webdriver.Firefox(options=self.options)
-        #     self.driver.set_page_load_timeout(30)
-        #     self.driver.set_script_timeout(30)
+        #         self.driver = webdriver.Chrome(options=self.options)
         # except Exception as e:
         #     logger.exception(e)
         #     self.terminate()
+        proxy = Proxy({
+            'proxyType': ProxyType.MANUAL,
+            "httpProxy": url,
+        })
+        self.options = webdriver.FirefoxOptions()
+        self.options.headless = True
+        self.options.proxy = proxy
+        self.options.set_preference('permissions.default.stylesheet', 2)
+        self.options.set_preference('permissions.default.image', 2)
+        try:
+            if self.remote_uri:
+                self.driver = webdriver.Remote(self.remote_uri, options=self.options)
+            else:
+                self.driver = webdriver.Firefox(options=self.options)
+            self.driver.set_page_load_timeout(30)
+            self.driver.set_script_timeout(30)
+        except Exception as e:
+            logger.exception(e)
+            self.terminate()
 
     def terminate(self):
         self._running = False
