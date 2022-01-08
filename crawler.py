@@ -316,7 +316,6 @@ class BookCrawler(Thread):
                 executor.submit(self.mongo_db.add_url, i)
 
     def load_page(self, url):
-        url = url.replace("?point=comment_point", "")
         try:
             resp = requests.get(url, timeout=20, proxies=self.proxies)
             resp.raise_for_status()
@@ -481,20 +480,18 @@ return scrollHeight;
             if len(href) < 30:
                 if "javascript" not in href:
                     url = "http://product.dangdang.com/" + href
-                    url = url.replace("?point=comment_point", "")
                     url_list.append(url)
 
         for link in soup.find_all('a', {"href": re.compile(r'^/[\d](.html)?')}):
             href = str(link.get('href')).split("#")[0]
             url = "http://product.dangdang.com" + href
-            url = url.replace("?point=comment_point", "")
             url_list.append(url)
 
         for link in soup.find_all('a', {"href": re.compile(r'product\.dangdang\.com/\d{6,10}\.html')}):
             url = link.get('href')
             if "http" not in url:
                 url = f"http:{url}"
-            url = url.replace("?point=comment_point", "")
+
             url_list.append(url)
 
         for link in soup.find_all('a', {
@@ -509,7 +506,12 @@ return scrollHeight;
             url = f"http://category.dangdang.com{url}"
             url_list.append(url)
         # 消除列表中重复的URL
-        url_list = set(url_list)
+        url_list = list(set(url_list))
+        for _ in range(len(url_list)):
+            url = url_list.pop(0)
+            url = url.replace("?point=comment_point", "")
+            url = url.replace("&ddclick_reco_recobar_category_1", "")
+            url_list.append(url)
         return list(url_list)
 
     def run(self):
