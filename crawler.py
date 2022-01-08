@@ -40,6 +40,19 @@ class IPProxy(object):
         self.proxy_author = base64.b64encode(f'{self.username}:{self.username}'.encode('utf-8'))
         self.get_ip_list()
 
+    def test_ip(self, ip):
+        proxies = {
+            "http": f"http://{ip}/",
+            "https": f"http://{ip}/"
+        }
+        try:
+            response = requests.get("http://httpbin.org/get", timeout=5, proxies=proxies)
+            if response.status_code == 200:
+                return True
+        except Exception as e:
+            logger.error(e)
+            return False
+
     def get_ip_list(self):
         while True:
             resp = requests.get(self.URL, verify=False)
@@ -54,19 +67,16 @@ class IPProxy(object):
                 time.sleep(3)
                 continue
             else:
-                for ip in proxy_list:
-                    # url = f"{self.username}:{self.password}@{ip}"
-                    proxies = {
-                        "http": f"http://{ip}/",
-                        "https": f"http://{ip}/"
-                    }
-                    try:
-                        response = requests.get("https://www.baidu.com", timeout=5, proxies=proxies)
-                        if response.status_code == 200:
-                            self.http_list.append(ip)
-                    except Exception as e:
-                        logger.error(e)
-                        continue
+                # url = f"{self.username}:{self.password}@{ip}"
+                # self.http_list.append(ip)
+                future_dict = {}
+                with ThreadPoolExecutor(max_workers=100) as executor:
+                    for ip in proxy_list:
+                        f = executor.submit(self.test_ip, ip)
+                        future_dict[ip] = f
+                    for k, f in future_dict.items():
+                        if f.result():
+                            self.http_list.append(k)
                 break
 
     def get_http_proxy(self):
