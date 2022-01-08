@@ -454,13 +454,14 @@ return scrollHeight;
         for link in soup.find_all('a', {
             "href": re.compile(r'category\.dangdang\.com/cp01\.41\.\d{2}\.\d{2}\.\d{2}\.\d{2}\.html')
         }):
-            href = link.get('href')
-            url_list.append(href)
+            url = link.get('href')
+            url_list.append(url)
         for link in soup.find_all('a', {
-            "href": re.compile(r'category\.dangdang\.com/pg\d{1,3}-cp01\.41\.\d{2}\.\d{2}\.\d{2}\.\d{2}\.html')
+            "href": re.compile(r'/p?g?\d{1,3}?-?cp01\.41\.\d{2}\.\d{2}\.\d{2}\.\d{2}\.html')
         }):
-            href = link.get('href')
-            url_list.append(href)
+            url = link.get('href')
+            url = f"http://category.dangdang.com{url}"
+            url_list.append(url)
         # 消除列表中重复的URL
         url_list = set(url_list)
         return list(url_list)
