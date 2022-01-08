@@ -77,6 +77,8 @@ class IPProxy(object):
                     for k, f in future_dict.items():
                         if f.result():
                             self.http_list.append(k)
+                if len(self.http_list) == 0:
+                    continue
                 break
 
     def get_http_proxy(self):
