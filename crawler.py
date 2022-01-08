@@ -105,6 +105,7 @@ class BookCrawler(Thread):
                 self.driver = webdriver.Remote(self.remote_uri, options=self.options)
             else:
                 self.driver = webdriver.Firefox(options=self.options)
+            self.driver.set_page_load_timeout(30)
         except Exception as e:
             logger.exception(e)
             self.terminate()
