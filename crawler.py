@@ -30,7 +30,8 @@ logger = logging.getLogger(__name__)
 
 
 class IPProxy(object):
-    URL = "http://dps.kdlapi.com/api/getdps/?orderid=964154501989611&num=5&pt=1&format=json&sep=1"
+    # URL = "http://dps.kdlapi.com/api/getdps/?orderid=964154501989611&num=10&pt=1&format=json&sep=1"
+    URL = "http://dev.kdlapi.com/api/getproxy/?orderid=924161047193729&num=100&protocol=1&method=1&an_an=1&an_ha=1&quality=0&sep=3"
 
     def __init__(self):
         self.http_list = []
@@ -44,8 +45,10 @@ class IPProxy(object):
             resp = requests.get(self.URL, verify=False)
             try:
                 resp.raise_for_status()
-                data = resp.json()
-                proxy_list = data.get("data", dict()).get("proxy_list", [])
+                # data = resp.json()
+                # proxy_list = data.get("data", dict()).get("proxy_list", [])
+                data = resp.content.decode('utf-8')
+                proxy_list = data.split(' ')
             except Exception as e:
                 logger.error(e)
                 time.sleep(3)
