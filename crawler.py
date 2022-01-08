@@ -60,9 +60,13 @@ class IPProxy(object):
                         "http": f"http://{ip}/",
                         "https": f"http://{ip}/"
                     }
-                    response = requests.get("https://www.baidu.com", proxies=proxies)
-                    if response.status_code == 200:
-                        self.http_list.append(ip)
+                    try:
+                        response = requests.get("https://www.baidu.com", timeout=5, proxies=proxies)
+                        if response.status_code == 200:
+                            self.http_list.append(ip)
+                    except Exception as e:
+                        logger.error(e)
+                        continue
                 break
 
     def get_http_proxy(self):
