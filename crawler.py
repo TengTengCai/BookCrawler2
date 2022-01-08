@@ -79,8 +79,8 @@ class BookCrawler(Thread):
         if random.randint(0, 100) % 2 == 0:
             url = self.ip_proxy.get_http_proxy()
         else:
-            # url = self.ip_proxy.get_http_proxy()
-            url = "tps333.kdlapi.com:15818"
+            url = self.ip_proxy.get_http_proxy()
+            # url = "tps333.kdlapi.com:15818"
         self.options = webdriver.ChromeOptions()
         self.options.add_argument("--headless")
         self.options.add_argument(f"--proxy-server=http://{url}")
