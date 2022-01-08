@@ -65,6 +65,7 @@ class IPProxy(object):
 class BookCrawler(Thread):
     def __init__(self, mongo_db: MongoDataBase, ip_proxy: IPProxy, dangdang: Dangdang, baidu: Baidu, remote_uri=''):
         super().__init__()
+        self._running = True
         self.mongo_db = mongo_db
         self.ip_proxy = ip_proxy
         self.dangdang = dangdang
@@ -94,6 +95,8 @@ class BookCrawler(Thread):
         self.options = webdriver.FirefoxOptions()
         self.options.headless = True
         self.options.proxy = proxy
+        self.options.set_preference('http.response.timeout', 10)
+        self.options.set_preference('dom.max_script_run_time', 5)
         self.options.set_preference('permissions.default.stylesheet', 2)
         self.options.set_preference('permissions.default.image', 2)
         try:
@@ -103,6 +106,10 @@ class BookCrawler(Thread):
                 self.driver = webdriver.Firefox(options=self.options)
         except Exception as e:
             logger.exception(e)
+            self.terminate()
+
+    def terminate(self):
+        self._running = False
 
     def is_login(self):
         p = re.compile(r"login\.dangdang\.com")
@@ -457,7 +464,7 @@ return scrollHeight;
         return list(url_list)
 
     def run(self):
-        while True:
+        while self._running:
             book_url = self.get_url()
             try:
                 self.load_page(book_url)
