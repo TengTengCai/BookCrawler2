@@ -40,7 +40,8 @@ class IPProxy(object):
         self.proxy_author = base64.b64encode(f'{self.username}:{self.username}'.encode('utf-8'))
         self.get_ip_list()
 
-    def test_ip(self, ip):
+    @staticmethod
+    def test_ip(ip):
         proxies = {
             "http": f"http://{ip}/",
             "https": f"http://{ip}/"
@@ -48,9 +49,9 @@ class IPProxy(object):
         try:
             response = requests.get("http://httpbin.org/get", timeout=5, proxies=proxies)
             if response.status_code == 200:
+                logger.info(f"Success Proxy IP {ip}")
                 return True
-        except Exception as e:
-            logger.error(e)
+        except requests.exceptions.RequestException:
             return False
 
     def get_ip_list(self):
