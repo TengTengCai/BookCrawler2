@@ -515,7 +515,7 @@ return scrollHeight;
                 logger.error(f"Load Page {book_url} Fail.")
                 self.driver.quit()
                 self.driver_init()
-            finally:
+            else:
                 self.mongo_db.update_url(book_url)
 
             book = self.parser(book_url)
