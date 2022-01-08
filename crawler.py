@@ -60,7 +60,7 @@ class IPProxy(object):
                         "http": f"http://{ip}/",
                         "https": f"http://{ip}/"
                     }
-                    response = requests.get("www.baidu.com", proxies=proxies)
+                    response = requests.get("https://www.baidu.com", proxies=proxies)
                     if response.status_code == 200:
                         self.http_list.append(ip)
                 break
