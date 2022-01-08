@@ -322,9 +322,11 @@ class BookCrawler(Thread):
         #             logger.error(e)
         #     self.driver.get(url)
         if self.is_login():
-            self.do_login()
-        if self.is_login():
-            self.do_baidu_login()
+            raise Exception("The IP cannot be used and should be replaced")
+        # if self.is_login():
+        #     self.do_login()
+        # if self.is_login():
+        #     self.do_baidu_login()
         self.driver.implicitly_wait(5)
         js = f"""
 let scrollHeight = Math.max(
