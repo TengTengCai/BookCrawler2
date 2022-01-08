@@ -318,7 +318,7 @@ class BookCrawler(Thread):
     def load_page(self, url):
         url = url.replace("?point=comment_point", "")
         try:
-            resp = requests.get(url, timeout=10, proxies=self.proxies)
+            resp = requests.get(url, timeout=20, proxies=self.proxies)
             resp.raise_for_status()
         except requests.exceptions.RequestException:
             self.mongo_db.update_url(url)
