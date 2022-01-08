@@ -142,7 +142,7 @@ class BookCrawler(Thread):
             "httpProxy": url,
         })
         self.options = webdriver.FirefoxOptions()
-        # self.options.headless = True
+        self.options.headless = True
         self.options.proxy = proxy
         self.options.set_preference('permissions.default.stylesheet', 2)
         self.options.set_preference('permissions.default.image', 2)
