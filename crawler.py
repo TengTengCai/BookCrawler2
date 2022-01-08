@@ -89,10 +89,14 @@ class BookCrawler(Thread):
                 "profile.managed_default_content_settings.images": 2,
                 "profile.managed_default_content_settings.stylesheet": 2,
             })
-        if self.remote_uri:
-            self.driver = webdriver.Remote(self.remote_uri, options=self.options)
-        else:
-            self.driver = webdriver.Chrome(options=self.options)
+        try:
+            if self.remote_uri:
+                self.driver = webdriver.Remote(self.remote_uri, options=self.options)
+            else:
+                self.driver = webdriver.Chrome(options=self.options)
+        except Exception as e:
+            logger.exception(e)
+            self.terminate()
         # proxy = Proxy({
         #     'proxyType': ProxyType.MANUAL,
         #     "httpProxy": url,
