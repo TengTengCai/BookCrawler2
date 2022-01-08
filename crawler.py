@@ -79,7 +79,8 @@ class BookCrawler(Thread):
         if random.randint(0, 100) % 2 == 0:
             url = self.ip_proxy.get_http_proxy()
         else:
-            url = "tps333.kdlapi.com:15818"
+            url = self.ip_proxy.get_http_proxy()
+            # url = "tps333.kdlapi.com:15818"
         # self.options = webdriver.ChromeOptions()
         # self.options.add_argument("--headless")
         # self.options.add_argument(f"--proxy-server={url}")
@@ -449,10 +450,6 @@ return scrollHeight;
                 url = f"http:{url}"
             url = url.replace("?point=comment_point", "")
             url_list.append(url)
-
-        for link in soup.find_all('a', {"href": re.compile(r'book\.dangdang\.com/\d{2}\.\d{2}\.htm')}):
-            href = link.get('href')
-            url_list.append(href)
 
         for link in soup.find_all('a', {
             "href": re.compile(r'category\.dangdang\.com/cp01\.41\.\d{2}\.\d{2}\.\d{2}\.\d{2}\.html')
