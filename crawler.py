@@ -53,7 +53,13 @@ class IPProxy(object):
             else:
                 for ip in proxy_list:
                     # url = f"{self.username}:{self.password}@{ip}"
-                    self.http_list.append(ip)
+                    proxies = {
+                        "http": f"http://{ip}/",
+                        "https": f"http://{ip}/"
+                    }
+                    response = requests.get("www.baidu.com", proxies=proxies)
+                    if response.status_code == 200:
+                        self.http_list.append(ip)
                 break
 
     def get_http_proxy(self):
