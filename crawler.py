@@ -18,6 +18,7 @@ import requests
 import selenium.common.exceptions
 from cv2 import cv2
 from selenium import webdriver
+# from seleniumwire import webdriver
 from selenium.webdriver import Proxy
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
@@ -30,8 +31,8 @@ logger = logging.getLogger(__name__)
 
 
 class IPProxy(object):
-    # URL = "http://dps.kdlapi.com/api/getdps/?orderid=964154501989611&num=10&pt=1&format=json&sep=1"
-    URL = "http://dev.kdlapi.com/api/getproxy/?orderid=924161047193729&num=100&protocol=1&method=1&an_an=1&an_ha=1&quality=0&sep=3"
+    URL = "http://dps.kdlapi.com/api/getdps/?orderid=964154501989611&num=10&pt=1&sep=3"
+    # URL = "http://dev.kdlapi.com/api/getproxy/?orderid=924161047193729&num=100&protocol=1&method=1&an_an=1&an_ha=1&quality=0&sep=3"
 
     def __init__(self):
         self.http_list = []
@@ -54,13 +55,11 @@ class IPProxy(object):
         except requests.exceptions.RequestException:
             return False
 
-    def get_ip_list(self):
+    def get_pub_ip_list(self):
         while True:
             resp = requests.get(self.URL, verify=False)
             try:
                 resp.raise_for_status()
-                # data = resp.json()
-                # proxy_list = data.get("data", dict()).get("proxy_list", [])
                 data = resp.content.decode('utf-8')
                 proxy_list = data.split(' ')
             except Exception as e:
@@ -68,8 +67,6 @@ class IPProxy(object):
                 time.sleep(3)
                 continue
             else:
-                # url = f"{self.username}:{self.password}@{ip}"
-                # self.http_list.append(ip)
                 future_dict = {}
                 with ThreadPoolExecutor(max_workers=100) as executor:
                     for ip in proxy_list:
@@ -80,6 +77,22 @@ class IPProxy(object):
                             self.http_list.append(k)
                 if len(self.http_list) == 0:
                     continue
+                break
+
+    def get_ip_list(self):
+        while True:
+            resp = requests.get(self.URL, verify=False)
+            try:
+                resp.raise_for_status()
+                data = resp.content.decode('utf-8')
+                proxy_list = data.split(' ')
+            except Exception as e:
+                logger.error(e)
+                time.sleep(3)
+                continue
+            else:
+                for ip in proxy_list:
+                    self.http_list.append(ip)
                 break
 
     def get_http_proxy(self):
@@ -108,10 +121,6 @@ class BookCrawler(Thread):
         else:
             url = self.ip_proxy.get_http_proxy()
             # url = "tps333.kdlapi.com:15818"
-        self.proxies = {
-            "http": f"http://{url}/",
-            "https": f"http://{url}/"
-        }
         # self.options = webdriver.ChromeOptions()
         # self.options.add_argument("--headless")
         # self.options.add_argument(f"--proxy-server=http://{url}")
@@ -133,7 +142,7 @@ class BookCrawler(Thread):
             "httpProxy": url,
         })
         self.options = webdriver.FirefoxOptions()
-        self.options.headless = True
+        # self.options.headless = True
         self.options.proxy = proxy
         self.options.set_preference('permissions.default.stylesheet', 2)
         self.options.set_preference('permissions.default.image', 2)
@@ -142,7 +151,7 @@ class BookCrawler(Thread):
                 self.driver = webdriver.Remote(self.remote_uri, options=self.options)
             else:
                 self.driver = webdriver.Firefox(options=self.options)
-            self.driver.set_page_load_timeout(20)
+            # self.driver.set_page_load_timeout(20)
         except Exception as e:
             logger.exception(e)
             self.terminate()
@@ -316,13 +325,8 @@ class BookCrawler(Thread):
                 executor.submit(self.mongo_db.add_url, i)
 
     def load_page(self, url):
-        try:
-            resp = requests.get(url, timeout=20, proxies=self.proxies)
-            resp.raise_for_status()
-        except requests.exceptions.RequestException:
-            self.mongo_db.update_url(url)
-            raise Exception(f"Request URL {url} is Fail.")
         self.driver.get(url)
+        self.driver.implicitly_wait(5)
         # if self.is_login() and os.path.exists("cookies.pkl"):
         #     cookies = pickle.load(open("cookies.pkl", "rb"))
         #     for cookie in cookies:
@@ -337,7 +341,7 @@ class BookCrawler(Thread):
         #     self.do_login()
         # if self.is_login():
         #     self.do_baidu_login()
-        self.driver.implicitly_wait(5)
+
         js = f"""
 let scrollHeight = Math.max(
   document.body.scrollHeight, document.documentElement.scrollHeight,
